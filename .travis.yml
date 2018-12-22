@@ -1,0 +1,25 @@
+sudo: required
+  services: 
+    - docker
+
+  before_install:
+  # in past proj we only use . but for this one, look into the ./client for build context
+    - docker build -t lchewy/react-test -f ./client/Dockerfile.dev ./client
+    # lchewy/react-test is an arbitrary name to tag (-t) my image
+    # - docker build myOtherProject
+  script:
+    - docker run lchewy/react-test npm test -- --coverage
+    # - docker run myOtherProject runMyTest
+
+  after_success:
+    - docker build -t lchewy/multi-client ./client
+    - docker build -t lchewy/multi-nginx ./nginx
+    - docker build -t lchewy/multi-server ./server
+    - docker build -t lchewy/multi-worker ./worker
+    # log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin  # $ means ENV variable we set in Travis console
+    # take built images and push them onto docker hub
+    - docker push lchewy/multi-client
+    - docker push lchewy/multi-nginx
+    - docker push lchewy/multi-server
+    - docker push lchewy/multi-worker
