@@ -1,0 +1,48 @@
+version: "3"
+services:
+  postgres:
+    image: "postgres:latest"
+  redis:
+    image: "redis:latest"
+  nginx:
+    restart: always # no matter what we always want nginx ready to go
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+  api: # changed from server to make nginx happy
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server # look in the server folder for dockerfile: Dockerfile.dev
+    volumes:
+    # every time our application tries to access anything inside /app dir inside container, 
+    # except for the node_modules folder, it is going to be redirected to server directory 
+    # back in our current project folder
+      - /app/node_modules # no need to reference anything in container /app/node_modules
+      - ./server:/app # reference everything else from ./server in container /app
+    environment: 
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379 #from redis docs in docker hub
+      - PGUSER=postgres # all PG env info are also from docker hub
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password 
+      - PGPORT=5432
+  client: 
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app # everything in the client dir should be shared with app folder
+  worker:
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
