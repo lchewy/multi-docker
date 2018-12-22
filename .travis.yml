@@ -18,7 +18,7 @@ sudo: required
     - docker build -t lchewy/multi-worker ./worker
     # log in to docker CLI
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin  # $ means ENV variable we set in Travis console
-    # take built images and push them onto docker hub
+    # take built images and push them onto docker hub    
     - docker push lchewy/multi-client
     - docker push lchewy/multi-nginx
     - docker push lchewy/multi-server
